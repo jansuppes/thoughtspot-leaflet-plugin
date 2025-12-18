@@ -1,0 +1,44 @@
+{
+  "name": "Leaflet Maps",
+  "id": "leaflet-maps",
+  "version": "1.0.0",
+  "description": "Interactive maps with markers, choropleth, and heatmaps",
+  "author": "Your Name",
+  "icon": "map-marker",
+  "categories": ["Geo", "Maps"],
+  "dataRequirements": {
+    "minColumns": 2,
+    "maxColumns": 10,
+    "requiresGeoData": true
+  },
+  "configOptions": [
+    {
+      "key": "mapType",
+      "displayName": "Map Type",
+      "type": "dropdown",
+      "options": [
+        { "label": "Marker Map", "value": "markers" },
+        { "label": "Heat Map", "value": "heatmap" },
+        { "label": "Cluster Map", "value": "cluster" }
+      ],
+      "defaultValue": "markers"
+    },
+    {
+      "key": "tileLayer",
+      "displayName": "Base Map",
+      "type": "dropdown",
+      "options": [
+        { "label": "OpenStreetMap", "value": "osm" },
+        { "label": "CartoDB Light", "value": "cartodb_light" },
+        { "label": "CartoDB Dark", "value": "cartodb_dark" }
+      ],
+      "defaultValue": "osm"
+    },
+    {
+      "key": "showLegend",
+      "displayName": "Show Legend",
+      "type": "boolean",
+      "defaultValue": true
+    }
+  ]
+}

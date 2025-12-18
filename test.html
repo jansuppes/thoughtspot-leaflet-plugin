@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Plugin Test</title>
+    <style>
+        #map-container {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ccc;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ThoughtSpot Leaflet Plugin Test</h1>
+    <div id="map-container"></div>
+
+    <script src="dist/leaflet-thoughtspot-plugin.js"></script>
+    <script>
+        // Mock data for testing
+        const mockDataModel = {
+            getData: () => [
+                { id: 1, lat: 40.7128, lng: -74.0060, city: 'New York', value: 100 },
+                { id: 2, lat: 34.0522, lng: -118.2437, city: 'Los Angeles', value: 80 },
+                { id: 3, lat: 41.8781, lng: -87.6298, city: 'Chicago', value: 60 }
+            ],
+            getColumns: () => [
+                { id: 'lat', name: 'latitude', type: 'measure' },
+                { id: 'lng', name: 'longitude', type: 'measure' },
+                { id: 'city', name: 'city', type: 'dimension' },
+                { id: 'value', name: 'value', type: 'measure' }
+            ]
+        };
+
+        const plugin = new ThoughtSpotLeafletPlugin();
+        
+        plugin.render({
+            dataModel: mockDataModel,
+            config: plugin.getDefaultConfig(),
+            containerElement: document.getElementById('map-container'),
+            width: 800,
+            height: 600
+        });
+    </script>
+</body>
+</html>

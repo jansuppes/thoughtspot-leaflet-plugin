@@ -1,0 +1,158 @@
+# Create a web app structure
+mkdir public
+mkdir server
+
+# Create the main application HTML
+cat > public/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThoughtSpot Leaflet Maps</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        #chart-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <div class="loading">Loading map...</div>
+    </div>
+
+    <script src="leaflet-thoughtspot-plugin.js"></script>
+    <script>
+        class ThoughtSpotIntegration {
+            constructor() {
+                this.plugin = new ThoughtSpotLeafletPlugin();
+                this.container = document.getElementById('chart-container');
+                
+                // Listen for messages from ThoughtSpot
+                window.addEventListener('message', this.handleMessage.bind(this));
+                
+                // Signal ready to parent
+                this.postMessage('ready', { version: '1.0.0' });
+            }
+
+            handleMessage(event) {
+                const { type, data } = event.data;
+                
+                switch (type) {
+                    case 'render':
+                        this.render(data);
+                        break;
+                    case 'resize':
+                        this.resize(data);
+                        break;
+                    case 'config':
+                        this.updateConfig(data);
+                        break;
+                    default:
+                        console.log('Unknown message type:', type);
+                }
+            }
+
+            render(data) {
+                try {
+                    const { dataModel, config = {}, width, height } = data;
+                    
+                    // Clear loading state
+                    this.container.innerHTML = '';
+                    
+                    // Merge with default config
+                    const finalConfig = { ...this.plugin.getDefaultConfig(), ...config };
+                    
+                    // Render the map
+                    this.plugin.render({
+                        dataModel: dataModel,
+                        config: finalConfig,
+                        containerElement: this.container,
+                        width: width || this.container.clientWidth,
+                        height: height || this.container.clientHeight,
+                        onDataPointClick: (data) => {
+                            this.postMessage('dataPointClick', data);
+                        }
+                    });
+
+                    this.postMessage('renderComplete', { success: true });
+                    
+                } catch (error) {
+                    console.error('Render error:', error);
+                    this.showError(error.message);
+                    this.postMessage('renderError', { error: error.message });
+                }
+            }
+
+            resize(data) {
+                const { width, height } = data;
+                if (this.plugin) {
+                    this.plugin.onResize(width, height);
+                }
+            }
+
+            updateConfig(data) {
+                // Re-render with new config
+                this.render(data);
+            }
+
+            showError(message) {
+                this.container.innerHTML = `
+                    <div class="error">
+                        <div>
+                            <h3>🗺️ Map Error</h3>
+                            <p>${message}</p>
+                            <small>Please check your data contains latitude and longitude columns</small>
+                        </div>
+                    </div>
+                `;
+            }
+
+            postMessage(type, data) {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type, data }, '*');
+                }
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ThoughtSpotIntegration();
+        });
+
+        // Handle any uncaught errors
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+        });
+    </script>
+</body>
+</html>
+EOF
